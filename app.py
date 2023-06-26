@@ -50,7 +50,7 @@ class PixelArt(db.Model):
 
 
 def remove_ip_addresses():
-    time_threshold = datetime.utcnow() - timedelta(minutes=30)
+    time_threshold = datetime.utcnow() - timedelta(minutes=40)
     users_to_update = Artist.query.filter(Artist.last_seen <= time_threshold).all()
 
     for user in users_to_update:
@@ -167,6 +167,8 @@ def route_publish_pixel_art():
     user.pixel_canvas_256 = json.dumps([0] * 256)
     db.session.commit()
 
+    update_last_seen()
+
     return jsonify(pixel_art.pixel_canvas_256)
 
 @app.route("/pixel/fill/<int:number>/<int:color>")
@@ -218,6 +220,7 @@ def route_reset_canvas():
 def get_my_canvas_data():
     user = get_user()
     if(user is None): return json.dumps([0] * 256)
+    remove_ip_addresses()
     return  user.pixel_canvas_256
 
 @app.route("/get_pixel_arts")
