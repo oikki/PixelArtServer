@@ -147,12 +147,14 @@ def get_pixel_arts_as_json():
     canvases = ";".join(json.dumps(pixel_art.pixel_canvas_256) for pixel_art in pixel_arts)
     usernames = ",".join(str(pixel_art.username) for pixel_art in pixel_arts)
     creation_dates = ",".join(str(pixel_art.creation_date_formatted()) for pixel_art in pixel_arts)
+    ids = ",".join(str(pixel_art.id) for pixel_art in pixel_arts)
 
 
     data = {
         "canvases": canvases,
         "usernames": usernames,
         "creation_dates": creation_dates,
+        "ids": ids
     }
 
     return jsonify(data)
