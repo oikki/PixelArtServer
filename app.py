@@ -45,9 +45,13 @@ class PixelArt(db.Model):
     def creation_date_formatted(self):
         return self.creation_date.strftime('%d-%m-%Y')
 
+def reset_user_canvas_with_zeros(user):
+    user.pixel_canvas_256 = json.dumps([0] * 256)
+    db.session.commit()
 
-
-
+def reset_user_canvas(user):
+    user.pixel_canvas_256 = json.dumps([16] * 256)
+    db.session.commit()
 
 def remove_ip_addresses():
     time_threshold = datetime.utcnow() - timedelta(minutes=40)
@@ -166,12 +170,38 @@ def route_publish_pixel_art():
     pixel_art = PixelArt(username=user.username, pixel_canvas_256=user.pixel_canvas_256, artist_id=user.id)
     user.pixel_arts.append(pixel_art)
     db.session.add(pixel_art)
-    user.pixel_canvas_256 = json.dumps([0] * 256)
     db.session.commit()
+    reset_user_canvas_with_zeros(user)
 
     update_last_seen(user)
 
     return jsonify(pixel_art.pixel_canvas_256)
+
+@app.route("/start_adding_pixels")
+def start_adding_pixels():
+    user = get_user()
+    if(user is None): return "Not registered"
+    reset_user_canvas(user)
+    return user.pixel_canvas_256
+
+@app.route("/add_pixels/<int:color1>/<int:color2>/<int:color3>/<int:color4>")
+def route_add_pixels_pixel(color1, color2, color3, color4):
+    user = get_user()
+    if(user is None): return "Not registered"
+
+    canvas_colors = eval(user.pixel_canvas_256)
+    for index, color in enumerate(canvas_colors):
+        if(color == 16):
+            canvas_colors[index] = color1
+            canvas_colors[index+1] = color2
+            canvas_colors[index+2] = color3
+            canvas_colors[index+3] = color4
+            break
+    user.pixel_canvas_256 = json.dumps(canvas_colors)
+    db.session.commit()
+    return user.pixel_canvas_256
+
+
 
 @app.route("/pixel/fill/<int:number>/<int:color>")
 def route_fill_pixel(number, color):
@@ -212,9 +242,7 @@ def route_change_pixel(number, color):
 def route_reset_canvas():
     user = get_user()
     if(user is None): return "Not registered"
-
-    user.pixel_canvas_256 = json.dumps([0] * 256)
-    db.session.commit()
+    reset_user_canvas_with_zeros(user)
     return  user.pixel_canvas_256
 
 
