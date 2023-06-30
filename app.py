@@ -36,6 +36,7 @@ class PixelArt(db.Model):
     pixel_canvas_256 = db.Column(Text)
 
     artist_id = db.Column(db.Integer, db.ForeignKey('artist.id'))
+    likes = db.Column(db.Integer, default=0)
 
     def __init__(self, username, pixel_canvas_256, artist_id):
         self.username = username
@@ -152,16 +153,31 @@ def get_pixel_arts_as_json():
     usernames = ",".join(str(pixel_art.username) for pixel_art in pixel_arts)
     creation_dates = ",".join(str(pixel_art.creation_date_formatted()) for pixel_art in pixel_arts)
     ids = ",".join(str(pixel_art.id) for pixel_art in pixel_arts)
+    likes = ",".join(str(pixel_art.likes) for pixel_art in pixel_arts)
 
 
     data = {
         "canvases": canvases,
         "usernames": usernames,
         "creation_dates": creation_dates,
-        "ids": ids
+        "ids": ids,
+        "likes": likes
     }
 
     return jsonify(data)
+
+def like_pixel_art_with_id(id):
+    pixel_art = PixelArt.query.filter_by(id=id).first()
+    if(pixel_art is not None):
+        pixel_art.likes += 1
+        db.session.commit()
+
+@app.route("/like_pixel_art/<int:id>")
+def route_like_pixel_art(id):
+    user = get_user()
+    if(user is None): return "Not registered"
+    like_pixel_art_with_id(id)
+    return "liked pixel art with id: " + str(id)
 
 @app.route("/publish_pixel_art")
 def route_publish_pixel_art():
