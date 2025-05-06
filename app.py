@@ -148,7 +148,10 @@ def fill_pixel(canvas_data, width, height, number, target_color, replacement_col
     return canvas_data
 
 def get_pixel_arts_as_json():
-    pixel_arts = PixelArt.query.order_by(PixelArt.creation_date.asc()).all()
+    #pixel_arts = PixelArt.query.order_by(PixelArt.creation_date.asc()).all()
+
+    pixel_arts = PixelArt.query.filter(PixelArt.creation_date > datetime(2025, 1, 1)).order_by(PixelArt.creation_date.asc()).all()
+
     canvases = ";".join(json.dumps(pixel_art.pixel_canvas_256) for pixel_art in pixel_arts)
     usernames = ",".join(str(pixel_art.username) for pixel_art in pixel_arts)
     creation_dates = ",".join(str(pixel_art.creation_date_formatted()) for pixel_art in pixel_arts)
